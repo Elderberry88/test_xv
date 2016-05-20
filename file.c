@@ -64,11 +64,14 @@ fileclose(struct file *f)
     release(&ftable.lock);
     return;
   }
+
+  // We need to release the flock before we free up the file struct
+  flock_release(f);
   ff = *f;
   f->ref = 0;
   f->type = FD_NONE;
   release(&ftable.lock);
-  
+
   if(ff.type == FD_PIPE)
     pipeclose(ff.pipe, ff.writable);
   else if(ff.type == FD_INODE){
@@ -138,6 +141,11 @@ filewrite(struct file *f, char *addr, int n)
 
       begin_trans();
       ilock(f->ip);
+      if (f->appendable)
+      {
+              f->off = f->ip->size;
+      }
+
       if ((r = writei(f->ip, addr + i, f->off, n1)) > 0)
         f->off += r;
       iunlock(f->ip);

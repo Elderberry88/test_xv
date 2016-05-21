@@ -1,7 +1,7 @@
 //
 // File-system system calls.
 // Mostly argument checking, since we don't trust
-// user code, and calls into file.c and fs.c.
+// user code, and calls into file.c, fs.c and mutex.c.
 //
 
 #include "types.h"
@@ -54,7 +54,7 @@ sys_dup(void)
 {
   struct file *f;
   int fd;
-  
+
   if(argfd(0, 0, &f) < 0)
     return -1;
   if((fd=fdalloc(f)) < 0)
@@ -92,7 +92,7 @@ sys_close(void)
 {
   int fd;
   struct file *f;
-  
+
   if(argfd(0, &fd, &f) < 0)
     return -1;
   proc->ofile[fd] = 0;
@@ -105,7 +105,7 @@ sys_fstat(void)
 {
   struct file *f;
   struct stat *st;
-  
+
   if(argfd(0, 0, &f) < 0 || argptr(1, (void*)&st, sizeof(*st)) < 0)
     return -1;
   return filestat(f, st);
@@ -315,6 +315,7 @@ sys_open(void)
   f->off = 0;
   f->readable = !(omode & O_WRONLY);
   f->writable = (omode & O_WRONLY) || (omode & O_RDWR);
+  f->appendable = (omode & O_APPEND) != 0;
   return fd;
 }
 
@@ -341,7 +342,7 @@ sys_mknod(void)
   char *path;
   int len;
   int major, minor;
-  
+
   begin_trans();
   if((len=argstr(0, &path)) < 0 ||
      argint(1, &major) < 0 ||
@@ -422,4 +423,30 @@ sys_pipe(void)
   fd[0] = fd0;
   fd[1] = fd1;
   return 0;
+}
+
+int
+sys_flock_ex(void)
+{
+  struct file *f;
+
+  if(argfd(0, 0, &f) < 0)
+  {
+    return -1;
+  }
+
+  return flock_acquire(f);
+}
+
+int
+sys_flock_un(void)
+{
+  struct file *f;
+
+  if(argfd(0, 0, &f) < 0)
+  {
+    return -1;
+  }
+
+  return flock_release(f);
 }

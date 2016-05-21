@@ -5,7 +5,7 @@ int fork(void);
 int exit(void) __attribute__((noreturn));
 int wait(void);
 int pipe(int*);
-int write(int, void*, int);
+int write(int, const void*, int);
 int read(int, void*, int);
 int close(int);
 int kill(int);
@@ -22,6 +22,15 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+// ex2 - add Mutex
+int flock_ex(int);
+int flock_un(int);
+// ex2 - add semaphores
+int sem_open(const char *name, int create, int init, int maxVal);
+int sem_close(int sd);
+int sem_wait(int sd);
+int sem_trywait(int sd);
+int sem_signal(int sd);
 
 // ulib.c
 int stat(char*, struct stat*);
@@ -29,10 +38,11 @@ char* strcpy(char*, char*);
 void *memmove(void*, void*, int);
 char* strchr(const char*, char c);
 int strcmp(const char*, const char*);
-void printf(int, char*, ...);
+void printf(int, const char*, ...);
 char* gets(char*, int max);
-uint strlen(char*);
+uint strlen(const char*);
 void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+int getline(char*, int);

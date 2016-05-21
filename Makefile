@@ -11,6 +11,7 @@ OBJS = \
 	lapic.o\
 	log.o\
 	main.o\
+	mutex.o\
 	mp.o\
 	picirq.o\
 	pipe.o\
@@ -21,6 +22,7 @@ OBJS = \
 	syscall.o\
 	sysfile.o\
 	sysproc.o\
+	syssem.o\
 	timer.o\
 	trapasm.o\
 	trap.o\
@@ -51,7 +53,7 @@ TOOLPREFIX := $(shell if i386-jos-elf-objdump -i 2>&1 | grep '^elf32-i386$$' >/d
 endif
 
 # If the makefile can't find QEMU, specify its path here
-#QEMU = 
+#QEMU =
 
 # Try to infer the correct QEMU
 ifndef QEMU
@@ -132,7 +134,7 @@ tags: $(OBJS) entryother.S _init
 vectors.S: vectors.pl
 	perl vectors.pl > vectors.S
 
-ULIB = ulib.o usys.o printf.o umalloc.o
+ULIB = ulib.o usys.o printf.o umalloc.o flock_common.o
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
@@ -164,13 +166,19 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
+	_flock_tester\
+	_flock_bad\
+	_flock_good\
+	_shop\
+	_shop_start\
+	_in\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
 
 -include *.d
 
-clean: 
+clean:
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*.o *.d *.asm *.sym vectors.S bootblock entryother \
 	initcode initcode.out kernel xv6.img fs.img kernelmemfs mkfs \
@@ -233,7 +241,8 @@ qemu-nox-gdb: fs.img xv6.img .gdbinit
 EXTRA=\
 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
-	printf.c umalloc.c\
+	printf.c umalloc.c flock_tester.c flock_good.c flock_bad.c\
+	shop_start.c shop.c in.c \
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 

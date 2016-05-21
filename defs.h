@@ -90,6 +90,10 @@ int             mpbcpu(void);
 void            mpinit(void);
 void            mpstartthem(void);
 
+// mutex.c
+int             flock_acquire(struct file*);
+int             flock_release(struct file*);
+
 // picirq.c
 void            picenable(int);
 void            picinit(void);

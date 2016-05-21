@@ -1,0 +1,42 @@
+# common suffixes
+*.d
+*.o
+*.asm
+*.swp
+*.sym
+
+# userland
+_cat
+_echo
+_forktest
+_grep
+_init
+_kill
+_ln
+_ls
+_mkdir
+_rm
+_sh
+_stressfs
+_usertests
+_wc
+_zombie
+_flock_bad
+_flock_good
+_flock_tester
+_in
+_shop
+_shop_start
+
+
+# other
+bootblock
+entryother
+fs.img
+initcode
+initcode.out
+kernel
+mkfs
+vectors.S
+xv6.img
+bochsout.txt

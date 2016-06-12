@@ -149,7 +149,11 @@ mkfs: mkfs.c fs.h
 	gcc -m32 -Werror -Wall -o mkfs mkfs.c
 
 UPROGS=\
+        _bigfile\
 	_cat\
+	_test\
+	_cat1\
+	_tail\
 	_echo\
 	_forktest\
 	_grep\
@@ -164,6 +168,8 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
+	_filesize\
+	_sfw\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
@@ -231,11 +237,11 @@ qemu-nox-gdb: fs.img xv6.img .gdbinit
 # check in that version.
 
 EXTRA=\
-	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
+	mkfs.c ulib.c user.h cat.c cat1.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
-	printf.c umalloc.c\
+	printf.c umalloc.c bigfile.c filesize.c tail.c sfw.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
-	.gdbinit.tmpl gdbutil\
+	.gdbinit.tmpl gdbutil test.c\
 
 dist:
 	rm -rf dist

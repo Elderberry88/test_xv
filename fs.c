@@ -356,7 +356,8 @@ iunlockput(struct inode *ip)
 static uint
 bmap(struct inode *ip, uint bn)
 {
-  uint addr, *a;
+  uint addr, *a, i;
+  uint i0, i1;
   struct buf *bp;
 
   if(bn < NDIRECT){
@@ -379,6 +380,36 @@ bmap(struct inode *ip, uint bn)
     brelse(bp);
     return addr;
   }
+  bn -= NINDIRECT;
+
+  for (i = 1; i <= INDIRECTN; i++){
+    if(bn < DINDIRECT){
+      i0 = bn / NINDIRECT;
+      i1 = bn % NINDIRECT;
+      // Load indirect block, allocating if necessary.
+      if((addr = ip->addrs[NDIRECT + i]) == 0)
+        ip->addrs[NDIRECT + i] = addr = balloc(ip->dev);
+
+      bp = bread(ip->dev, addr);
+      a = (uint*)bp->data;
+      if((addr = a[i0]) == 0){
+        a[i0] = addr = balloc(ip->dev);
+        log_write(bp);
+      }
+      brelse(bp);
+
+      bp = bread(ip->dev, addr);
+      a = (uint*)bp->data;
+      if((addr = a[i1]) == 0){
+        a[i1] = addr = balloc(ip->dev);
+        log_write(bp);
+      }
+      brelse(bp);
+      return addr;
+    }
+
+    bn -= DINDIRECT;
+  }
 
   panic("bmap: out of range");
 }
@@ -391,9 +422,9 @@ bmap(struct inode *ip, uint bn)
 static void
 itrunc(struct inode *ip)
 {
-  int i, j;
-  struct buf *bp;
-  uint *a;
+  int i, j, k;
+  struct buf *bp, *bpi;
+  uint *a, *b;
 
   for(i = 0; i < NDIRECT; i++){
     if(ip->addrs[i]){
@@ -401,7 +432,7 @@ itrunc(struct inode *ip)
       ip->addrs[i] = 0;
     }
   }
-  
+
   if(ip->addrs[NDIRECT]){
     bp = bread(ip->dev, ip->addrs[NDIRECT]);
     a = (uint*)bp->data;
@@ -412,6 +443,29 @@ itrunc(struct inode *ip)
     brelse(bp);
     bfree(ip->dev, ip->addrs[NDIRECT]);
     ip->addrs[NDIRECT] = 0;
+  }
+
+  for (k = 1; k <= INDIRECTN; k++){
+    if(ip->addrs[NDIRECT + k]){
+      bp = bread(ip->dev, ip->addrs[NDIRECT + k]);
+      a = (uint*)bp->data;
+      for(j = 0; j < NINDIRECT; j++){
+        if(a[j]){
+          bpi = bread(ip->dev, a[j]);
+          b = (uint*)bpi->data;
+          for(k = 0; k < NINDIRECT; k++){
+            if(b[k]){
+              bfree(ip->dev, b[k]);
+            }
+          }
+          brelse(bpi);
+          bfree(ip->dev, a[j]);
+        }
+      }
+      brelse(bp);
+      bfree(ip->dev, ip->addrs[NDIRECT + k]);
+      ip->addrs[NDIRECT + k] = 0;
+    }
   }
 
   ip->size = 0;
@@ -648,3 +702,4 @@ nameiparent(char *path, char *name)
 {
   return namex(path, 1, name);
 }
+/* vim: set tabstop=2 shiftwidth=2 expandtab: */

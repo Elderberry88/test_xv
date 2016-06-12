@@ -76,6 +76,17 @@ sys_read(void)
 }
 
 int
+sys_lseek(void)
+{
+  struct file *f;
+  int n, c;
+
+  if(argfd(0, 0, &f) < 0 || argint(1, &n) < 0 || argint(2, &c) < 0)
+    return -1;
+  return filelseek(f, n, (char)c);
+}
+
+int
 sys_write(void)
 {
   struct file *f;

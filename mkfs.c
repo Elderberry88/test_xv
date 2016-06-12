@@ -11,10 +11,10 @@
 #include "stat.h"
 #include "param.h"
 
-int nblocks = 985;
+int nblocks = 20985;
 int nlog = LOGSIZE;
 int ninodes = 200;
-int size = 1024;
+int size = 21029;
 
 int fsfd;
 struct superblock sb;

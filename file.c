@@ -111,6 +111,34 @@ fileread(struct file *f, char *addr, int n)
   panic("fileread");
 }
 
+int
+filelseek(struct file *f, int seek, char c)
+{
+  if (f->type != FD_INODE)
+    return -1;
+
+  int final_offset = f->off + seek;
+  if (final_offset < 0) {
+    f->off = 0;
+    return f->off;
+  }
+
+  if (final_offset < f->ip->size) {
+    f->off += seek;
+    return f->off;
+  }
+
+  f->off = f->ip->size;
+  while (f->off < final_offset) {
+    if (filewrite(f, &c, 1) < 0)
+    {
+      break;
+    }
+  }
+
+  return f->off;
+}
+
 //PAGEBREAK!
 // Write to file f.
 int
@@ -154,3 +182,4 @@ filewrite(struct file *f, char *addr, int n)
   panic("filewrite");
 }
 
+/* vim: set tabstop=2 shiftwidth=2 expandtab: */
